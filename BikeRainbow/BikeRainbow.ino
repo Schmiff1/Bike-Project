@@ -3,7 +3,7 @@
 // constants
 const int NUM_LEDS = 80; // number of LEDS in the strip
 const int MIN_SPEED_INTERVAL = 500; // 500ms per rotation; 10mph
-const int MIN_SPEED_INTERVAL = 5000; // 5000ms per rotation; 1mph
+const int MAX_SPEED_INTERVAL = 5000; // 5000ms per rotation; 1mph
 const int DELAY_MS = 1; // number of ms to delay by
 const int COLORVAL_PER_MPH = 127; // max colorVal (1275) / max mph (10)
 
@@ -17,14 +17,14 @@ int rotateInt = 0; // time in ms between each rotation
 int prevColorVal = 1275;  // initialize previous color value
 int colorVal = 1275; // initialize color value
 double mph = 0; // variable for current mph, range: 1-20 mph
-bool read = false;
+bool read = false; // avoid extra readings of magSensor in loop()
 
 CRGB leds[NUM_LEDS]; // array of LEDS in strip
 
 // find the interval between each rotation
 int FindRotateInterval(int prevColorVal, int colorVal) {
   magSensor = digitalRead(MAGSENSOR_PIN); // read magnet sensor
-  int rotateInt = 0; // reset rotation
+  rotateInt = 0; // reset rotation
 
   int colorStep = (prevColorVal - colorVal) / 3; // interval for gradual color change
 
@@ -32,24 +32,24 @@ int FindRotateInterval(int prevColorVal, int colorVal) {
   while(magSensor == 1) {
     read = false;
     // change color gradually over first 150 ms; changes by x colorVal every 10 ms
-    if (rotateInt <= 150 & rotateInt % 50 == 0) {
-      ColorChange(prevColorVal - (colorStep * (rotateInt / 10)));
+    if (rotateInt <= 300 && rotateInt % 100 == 0) {
+      ColorChange(prevColorVal - (colorStep * (rotateInt / 100)));
     }
-    
+
     delay(DELAY_MS); // delay 1ms
     magSensor = digitalRead(MAGSENSOR_PIN); // read magnet sensor input
-    
-    rotateInterval++; // interval between each rotation, increases by 1 every 10 ms
+    // keep rotate int below MAX_SPEED_INTERVAL
+    if (rotateInt <= MAX_SPEED_INTERVAL) {
+      rotateInt++; // interval between each rotation, increases by 1 every 10 ms
+    }
     
   }
-  // keep rotateInt between Max and Min speeds
-  // MAX_SPEED_INTERVAL = slowest mph speed (rotateInt and mph have an inverse relationship)
-  if (rotateInt >= MAX_SPEED_INTERVAL) {
-    rotateInt = MAX_SPEED_INTERVAL;
-  } else if (rotateInt <= MIN_SPEED_INTERVAL) {
+  // keep rotateInt above MIN_SPEED_INTERVAL
+  // MIN_SPEED_INTERVAL = Fastest mph speed (rotateInt and mph have an inverse relationship)
+  if (rotateInt <= MIN_SPEED_INTERVAL) {
     rotateInt = MIN_SPEED_INTERVAL;
   }
-  return(rotateInterval);
+  return(rotateInt);
 } 
 
 // change color of leds based on value of colorVal
@@ -90,18 +90,18 @@ void loop() {
   // find interval between rotation
   rotateInt = FindRotateInterval(prevColorVal, colorVal);
   
-
   if(rotateInt >= MIN_SPEED_INTERVAL && !read) {
-    Serial.println(rotateInt);
+    
     prevColorVal = colorVal; 
 
     mph = 1.0 / (rotateInt / 5000.0); // mph = reciprical of interval between each rotation, divided by 5000
     int nearestMPH = (int)mph; // nearest mph is rounding down mph to use as range for map
+    Serial.println(mph);
 
     // mapping the mph to colorVal; using nearestMPH to make range more precise and accurate to the current speed aswell
     // as avoiding using rotateInt (range of 1 to 2 mph is 2500 ms, while 9 to 10 is only 55 ms)
-    colorVal = map(mph, nearestMPH, (nearestMPH + 1), (COLORVAL_PER_MPH * nearestMPH), (COLORVAL_PER_MPH * (nearestMPH + 1))); 
-
+    colorVal = map(mph, (nearestMPH - 1), nearestMPH, (COLORVAL_PER_MPH * (nearestMPH - 1)), (COLORVAL_PER_MPH * nearestMPH)); 
+    Serial.println(colorVal);
     read = true;
   }
  
