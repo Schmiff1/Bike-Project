@@ -18,7 +18,7 @@ int prevColorVal = 1275;  // initialize previous color value
 int colorVal = 1275; // initialize color value
 double mph = 0; // variable for current mph, range: 1-20 mph
 bool read = false; // avoid extra readings of magSensor in loop()
-bool party = false;
+bool atMaxSpeed = false; // bool to determine if at highest speed or not; used to trigger rainbow() function
 
 CRGB leds[NUM_LEDS]; // array of LEDS in strip
 
@@ -32,15 +32,14 @@ int FindRotateInterval(int prevColorVal, int colorVal) {
   // while the magnet sensor does not read a magnetic field, increases rotation interval
   while(magSensor == 1) {
     read = false;
-    Serial.println(rotateInt);
     
     // change color gradually over first 150 ms; changes by x colorVal every 10 ms
     if (rotateInt <= 300 && rotateInt % 100 == 0) {
       ColorChange(prevColorVal - (colorStep * (rotateInt / 100)));
     }
 
-    if(party && rotateInt % 25 == 0) {
-      RainbowParty(rotateInt);
+    if(atMaxSpeed && rotateInt % 25 == 0) {
+      Rainbow(rotateInt);
     }
 
     delay(DELAY_MS); // delay 1ms
@@ -61,7 +60,7 @@ int FindRotateInterval(int prevColorVal, int colorVal) {
 
 // change color of leds based on value of colorVal
 void ColorChange(int colorVal) {
-  party = false;
+  atMaxSpeed = false;
   //set color, colorVal = 0 is fastest; colorVal = 1275 is slowest
   if(colorVal <= 255) {
     fill_solid(leds, NUM_LEDS, CRGB(255 - colorVal, 0, 255)); // purple to blue
@@ -74,7 +73,7 @@ void ColorChange(int colorVal) {
   } else if(colorVal <= 1275) {
     fill_solid(leds, NUM_LEDS, CRGB(255, 255 - (colorVal - 1020), 0)); // yellow to red
   } else if(colorVal <= 1530) {
-    party = true;
+    atMaxSpeed = true;
   }
   else {
     fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0)); // turn off LEDS
@@ -82,7 +81,7 @@ void ColorChange(int colorVal) {
   FastLED.show();
 }
 
-void RainbowParty(int rotateInterval) {
+void Rainbow(int rotateInterval) {
   for(int i = 0; i < NUM_LEDS; i++) {
     if(i % 12 == rotateInterval % 12) {
       leds[i] = CRGB(255, 0, 0); // red
@@ -119,9 +118,6 @@ void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(50);
 
-  // setup serial monitor
-  //Serial.begin(9600);
-
   // defining pins
   pinMode(DATA_PIN, OUTPUT);
   pinMode(MAGSENSOR_PIN, INPUT);
@@ -144,7 +140,6 @@ void loop() {
     colorVal = map(mph, (nearestMPH - 1), nearestMPH, (COLORVAL_PER_MPH * (nearestMPH - 1)), (COLORVAL_PER_MPH * nearestMPH)); 
     read = true;
   }
- 
 }
 
 
