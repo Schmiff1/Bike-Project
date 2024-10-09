@@ -32,7 +32,7 @@ as my experience in the field expands.
 
 ### Key components
 
-#### 1. Loop function
+#### Loop function
 - The loop function has 3 main parts:
     1. Finding the rotate interval
     2. Converting the rotate interval to miles per hour
@@ -55,10 +55,10 @@ void loop() {
 }
 ```
 
-#### 2. Finding the interval between each rotation.
+#### 1. Finding the interval between each rotation.
 - This function reads the magnetic hall effect sensor and calculates the time between rotations of the wheel.
 - In order to achieve a gradual color change, this function also changes the color of the lights for the first 300 ms
-    - This also goes for the Rainbow function, requiring calls of the function every 25ms in order to achieve the desired effect.
+- This also is used to call the Rainbow function, requiring calls every 25ms in order to achieve the desired lighting effect.
 ``` cpp
 int FindRotateInterval(int prevColorVal, int colorVal) {
   magSensor = digitalRead(MAGSENSOR_PIN); // read magnet sensor
@@ -86,6 +86,56 @@ int FindRotateInterval(int prevColorVal, int colorVal) {
 } 
 ```
 
+#### 2. Calculating speed
+- This is just a one line function with the equation to convert the rotate interval to mph. The math for this function can be shown using dimensional analysis.
+```cpp
+double calculateSpeed(int rotateInterval) {
+  return 1.0 / (rotateInterval / 5000.0); // mph = reciprical of interval between each rotation, divided by 5000ms
+}
+```
+
+#### 3.1 Calculating the ColorVal
+
+- This is again just a one line function, multiplying the miles per hour by the range of color values in one mile per hour(maxColorVal / maxMPH)
+- the rest of the lines of this function are just to double check that the colorVal stays within its bounds.
+```cpp
+int calculateColorVal(double mph) {
+  // finding the colorVal at an mph value
+  int colorVal = static_cast<int>(COLORVAL_PER_MPH * mph);
+
+  // keep colorVal within its range
+  if (colorVal < 0) colorval = 0;
+  if (colorVal > 1530) colorVal = 1530;
+  return colorVal;
+}
+```
+
+#### 3.2 Displaying the ColorVal
+- The color value is a value in multiples of 255 in order to determine the RGB value for the LED strip. Currently, the max value for this function is 1530, giving us 6 ranges of color.
+- This is then shown in the code as 6 if/else if statements, calculating the RGB color based on the value of colorVal
+
+```cpp
+void ColorChange(int colorVal) {
+  atMaxSpeed = false;
+  //set color, colorVal = 0 is fastest; colorVal = 1275 is slowest
+  if(colorVal <= 255) {
+    fill_solid(leds, NUM_LEDS, CRGB(255 - colorVal, 0, 255)); // purple to blue
+  } else if(colorVal <= 510) {
+    fill_solid(leds, NUM_LEDS, CRGB(0, (colorVal - 255), 255)); // blue to teal
+  } else if(colorVal <= 765) {
+    fill_solid(leds, NUM_LEDS, CRGB(0, 255, 255 - (colorVal - 510))); // teal to green
+  } else if(colorVal <= 1020) {
+    fill_solid(leds, NUM_LEDS, CRGB((colorVal - 765), 255, 0)); // green to yellow
+  } else if(colorVal <= 1275) {
+    fill_solid(leds, NUM_LEDS, CRGB(255, 255 - (colorVal - 1020), 0)); // yellow to red
+  } else if(colorVal <= 1530) {
+    atMaxSpeed = true;
+  } else {
+    fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0)); // turn off LEDS if value outside of colorVal range
+  }
+  FastLED.show();
+}
+```
 
 
 ## Future Features
