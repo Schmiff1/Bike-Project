@@ -59,7 +59,7 @@ int FindRotateInterval(int prevColorVal, int colorVal) {
 } 
 
 double calculateSpeed(int rotateInterval) {
-  return 1.0 / (rotateInterval / 5000.0); // mph = reciprical of interval between each rotation, divided by 5000
+  return 1.0 / (rotateInterval / 5000.0); // mph = reciprical of interval between each rotation, divided by 5000ms
 }
 
 int calculateColorVal(double mph) {
@@ -136,7 +136,6 @@ void setup() {
   pinMode(DATA_PIN, OUTPUT);
   pinMode(MAGSENSOR_PIN, INPUT);
 }
-
 
 void loop() {
   
