@@ -107,70 +107,81 @@ int calculateColorVal(double mph) {
 
 #### 3.2 Displaying the ColorVal
 - The color value is a value in multiples of 255 in order to determine the RGB value for the LED strip. Currently, the max value for this function is 1530, giving us 6 ranges of color.
-- This is then shown in the code as 6 if/else if statements, calculating the RGB color based on the value of colorVal
+- This is then shown in the code as 6 cases of the switch statement, each case being a different range of color. Each case uses the subIndex to show the gradient between colors.
 
 ```cpp
 void ColorChange(int colorVal) {
   atMaxSpeed = false;
-  //set color, colorVal = 0 is fastest; colorVal = 1275 is slowest
-  if(colorVal <= 255) {
-    fill_solid(leds, NUM_LEDS, CRGB(255 - colorVal, 0, 255)); // purple to blue
-  } else if(colorVal <= 510) {
-    fill_solid(leds, NUM_LEDS, CRGB(0, (colorVal - 255), 255)); // blue to teal
-  } else if(colorVal <= 765) {
-    fill_solid(leds, NUM_LEDS, CRGB(0, 255, 255 - (colorVal - 510))); // teal to green
-  } else if(colorVal <= 1020) {
-    fill_solid(leds, NUM_LEDS, CRGB((colorVal - 765), 255, 0)); // green to yellow
-  } else if(colorVal <= 1275) {
-    fill_solid(leds, NUM_LEDS, CRGB(255, 255 - (colorVal - 1020), 0)); // yellow to red
-  } else if(colorVal <= 1530) {
-    atMaxSpeed = true;
-  } else {
-    fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0)); // turn off LEDS if value outside of colorVal range
+
+  int index = colorVal / 255;
+  int subIndex = colorVal % 255;
+
+  switch (index) {
+    case 0:
+      fill_solid(leds, NUM_LEDS, CRGB(255 - subIndex, 0, 255)); // purple to blue
+      break;
+    case 1:
+      fill_solid(leds, NUM_LEDS, CRGB(0, subIndex, 255)); // blue to teal
+      break;
+    case 2:
+      fill_solid(leds, NUM_LEDS, CRGB(0, 255, 255 - subIndex)); // teal to green
+      break;
+    case 3:
+      fill_solid(leds, NUM_LEDS, CRGB(subIndex, 255, 0)); // green to yellow
+      break;
+    case 4:
+      fill_solid(leds, NUM_LEDS, CRGB(255, 255 - subIndex, 0)); // yellow to red
+      break;
+    case 5:
+      atMaxSpeed = true;
+      break;
+    default:
+      fill_solid(leds, NUM_LEDS, CRGB(0, 0, 0)); // turn off LEDS
+      break;
   }
+
   FastLED.show();
 }
 ```
 
 - Whenever the value of colorVal is between 1275 and 1530 (__ to 20mph), atMaxSpeed becomes true, which starts running the Rainbow function.
-  The Rainbow function contains a series of 12 if statements and colors that are constanly looped through during the FindRotateInterval function.
-  This causes an interesting and very visually pleasing effect on the LED lights, running through each of the colors of the rainbow
+  The Rainbow function runs through each of the LEDS and sets them to different values in the array of colors. This causes a very interesting
+  and visually pleasing effect, which can be seen in the Showcase section.
 ```cpp
+CRGB colors[] = {
+  CRGB(255, 0, 0),     // Red
+  CRGB(255, 127, 0),   // Orange
+  CRGB(255, 255, 0),   // Yellow
+  CRGB(127, 255, 0),   // Spring Green
+  CRGB(0, 255, 0),     // Green
+  CRGB(0, 255, 127),   // Turquoise
+  CRGB(0, 255, 255),   // Cyan
+  CRGB(0, 127, 255),   // Azure
+  CRGB(0, 0, 255),     // Blue
+  CRGB(127, 0, 255),   // Violet
+  CRGB(255, 0, 255),   // Magenta
+  CRGB(255, 0, 127)    // Rose
+};
+
 void Rainbow(int rotateInterval) {
   for(int i = 0; i < NUM_LEDS; i++) {
-    if(i % 12 == rotateInterval % 12) {
-      leds[i] = CRGB(255, 0, 0); // red
-    } else if(i % 12 == (rotateInterval + 1) % 12) {
-      leds[i] = CRGB(255,127,0); // orange
-    } else if(i % 12 == (rotateInterval + 2) % 12) {
-      leds[i] = CRGB(255, 255, 0); // yellow
-    } else if(i % 12 == (rotateInterval + 3) % 12) {
-      leds[i] = CRGB(127,255,0); // spring green?
-    } else if(i % 12 == (rotateInterval + 4) % 12) {
-      leds[i] = CRGB(0, 255, 0); // green
-    } else if(i % 12 == (rotateInterval + 5) % 12) {
-      leds[i] = CRGB(0,255,127); // turquoise
-    } else if(i % 12 == (rotateInterval + 6) % 12) {
-      leds[i] = CRGB(0, 255, 255); // cyan
-    } else if(i % 12 == (rotateInterval + 7) % 12) {
-      leds[i] = CRGB(0,127,255); // azure
-    } else if(i % 12 == (rotateInterval + 8) % 12) {
-      leds[i] = CRGB(0, 0, 255); // blue
-    } else if(i % 12 == (rotateInterval + 9) % 12) {
-      leds[i] = CRGB(127,0,255); // violet
-    } else if(i % 12 == (rotateInterval + 10) % 12) {
-      leds[i] = CRGB(255, 0, 255); // magenta
-    } else if(i % 10 == (rotateInterval + 11) % 12) {
-      leds[i] = CRGB(255,0,127); // rose
-    }
+    leds[i] = colors[(i + rotateInterval) % NUM_RAINBOW_COLORS];
   }
   FastLED.show();
 }
 ```
 
 
-## Future Features
-- Include multiple files for different lighting effects
-- Install all parts onto a PCB board to replace breadboard
-- Switch to a smaller microcontroller for a more compact, functional, and easier to implement design (e.g. arduino nano/nano-every/pro mini or ESP32-C3)
-- Bluetooth/wi-fi capabilities
+## Future Ideas
+### Features
+- Include multiple files for different lighting effects.
+- Create custom PCB with esp32 microcontroller for a more compact and functionable design.
+- Bluetooth/wi-fi capabilities, allowing for the changing of color through a phone app, as well as viewing bikes speed through an app.
+- 3D modeled casing for new PCB board that allows for easy attachment and removal to bike.
+- Visual speedometer
+
+### Bugs/Updates
+- Stronger magnet sensor
+- Put circuit on fork of bike to allow for a more compact design, including the magnet sensor in the future casing
+- Stop rainbow glitching
+- Move LED strip to be easier to attach/detach
