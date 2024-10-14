@@ -101,12 +101,7 @@ double calculateSpeed(int rotateInterval) {
 ```cpp
 int calculateColorVal(double mph) {
   // finding the colorVal at an mph value
-  int colorVal = static_cast<int>(COLORVAL_PER_MPH * mph);
-
-  // keep colorVal within its range
-  if (colorVal < 0) colorval = 0;
-  if (colorVal > 1530) colorVal = 1530;
-  return colorVal;
+  return (int)(COLORVAL_PER_MPH * mph);
 }
 ```
 
@@ -137,9 +132,45 @@ void ColorChange(int colorVal) {
 }
 ```
 
+- Whenever the value of colorVal is between 1275 and 1530 (__ to 20mph), atMaxSpeed becomes true, which starts running the Rainbow function.
+  The Rainbow function contains a series of 12 if statements and colors that are constanly looped through during the FindRotateInterval function.
+  This causes an interesting and very visually pleasing effect on the LED lights, running through each of the colors of the rainbow
+```cpp
+void Rainbow(int rotateInterval) {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    if(i % 12 == rotateInterval % 12) {
+      leds[i] = CRGB(255, 0, 0); // red
+    } else if(i % 12 == (rotateInterval + 1) % 12) {
+      leds[i] = CRGB(255,127,0); // orange
+    } else if(i % 12 == (rotateInterval + 2) % 12) {
+      leds[i] = CRGB(255, 255, 0); // yellow
+    } else if(i % 12 == (rotateInterval + 3) % 12) {
+      leds[i] = CRGB(127,255,0); // spring green?
+    } else if(i % 12 == (rotateInterval + 4) % 12) {
+      leds[i] = CRGB(0, 255, 0); // green
+    } else if(i % 12 == (rotateInterval + 5) % 12) {
+      leds[i] = CRGB(0,255,127); // turquoise
+    } else if(i % 12 == (rotateInterval + 6) % 12) {
+      leds[i] = CRGB(0, 255, 255); // cyan
+    } else if(i % 12 == (rotateInterval + 7) % 12) {
+      leds[i] = CRGB(0,127,255); // azure
+    } else if(i % 12 == (rotateInterval + 8) % 12) {
+      leds[i] = CRGB(0, 0, 255); // blue
+    } else if(i % 12 == (rotateInterval + 9) % 12) {
+      leds[i] = CRGB(127,0,255); // violet
+    } else if(i % 12 == (rotateInterval + 10) % 12) {
+      leds[i] = CRGB(255, 0, 255); // magenta
+    } else if(i % 10 == (rotateInterval + 11) % 12) {
+      leds[i] = CRGB(255,0,127); // rose
+    }
+  }
+  FastLED.show();
+}
+```
+
 
 ## Future Features
 - Include multiple files for different lighting effects
 - Install all parts onto a PCB board to replace breadboard
-- Switch to a smaller microcontroller for a more and easier to implement design (e.g. arduino nano/nano-every/pro mini or ESP32-C3)
+- Switch to a smaller microcontroller for a more compact, functional, and easier to implement design (e.g. arduino nano/nano-every/pro mini or ESP32-C3)
 - Bluetooth/wi-fi capabilities
