@@ -15,6 +15,10 @@ as my experience in the field expands.
 
 ## Showcase
 
+![Error Displaying Image!](images/PXL_20241014_013656475.jpg "Arduino attachment")
+![Error Displaying Image!](images/PXL_20241014_013703280.jpg "Magnetic sensor")
+![Error Displaying Image!](images/PXL_20241014_013728026.jpg "Full Attachment")
+
 ## How It's Made
 
 ### Schematic
